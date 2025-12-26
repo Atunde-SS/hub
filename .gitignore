@@ -1,0 +1,44 @@
+# Environment
+.env
+.env.local
+*.log
+
+# Dependencies
+node_modules/
+
+# Hardhat
+artifacts/
+cache/
+typechain/
+typechain-types/
+types/
+coverage/
+coverage.json
+*.db
+
+# FHEVM
+fhevmTemp/
+
+# Local development folders
+cofi/
+
+# Temporary / Generated
+test-output/
+output/
+*-test/
+test-*/
+final-test-*/
+swap-dapp/
+test-dapp*/
+test-mvp/
+base-template/
+.claude/
+.vscode/
+.idea/
+.DS_Store
+CLAUDE.md
+
+# Next.js
+.next/
+out/
+build/
