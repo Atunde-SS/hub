@@ -30,6 +30,12 @@ export default function GenericInteraction() {
     Record<string, boolean>
   >({});
   const [logs, setLogs] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  // Only render after mounting to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (contractABI.length > 0) {
@@ -110,7 +116,8 @@ export default function GenericInteraction() {
     }
   };
 
-  if (!isConnected) return null;
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted || !isConnected) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

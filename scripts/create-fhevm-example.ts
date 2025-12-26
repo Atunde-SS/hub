@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { EXAMPLES_MAP } from './config/examples';
+import { generateAndWriteQuickInteract, listContractFunctions, generateFunctionsSummary } from './utils/quick-interact-generator';
 
 // Color codes for terminal output
 enum Color {
@@ -158,6 +159,43 @@ ${useFrontend ? frontendSection : ''}
 
 The main contract is \`${contractName}\` located in \`contracts/${contractName}.sol\`.
 
+## Interact Without Frontend
+
+This example includes an **auto-generated quick-interact script** that lets you interact with the ${contractName} contract directly from the terminal - no frontend, no wallet extensions needed!
+
+### Method 1: Quick Interact Script (Recommended)
+
+Run the contract with all functions demonstrated:
+
+\`\`\`bash
+# Start local blockchain
+npx hardhat node
+
+# In another terminal, run the script
+npx hardhat run scripts/quick-interact.ts --network localhost
+\`\`\`
+
+**Output**: You'll see deployment, function calls, and results all in the terminal.
+
+### Method 2: Hardhat Console
+
+For interactive exploration:
+
+\`\`\`bash
+npx hardhat console --network localhost
+
+> const contract = await ethers.getContractAt('${contractName}', '<deployed-address>')
+> // Call any function
+\`\`\`
+
+### Method 3: Run Tests
+
+Tests demonstrate contract functionality:
+
+\`\`\`bash
+npm run test
+\`\`\`
+
 ## Testing
 
 Run the test suite:
@@ -275,9 +313,24 @@ function createExample(exampleName: string, outputDir: string, useFrontend: bool
   updatePackageJson(outputDir, exampleName, example.description);
   success('Configuration updated');
 
-  // Step 5: Copy Frontend (Optional)
+  // Step 5: Generate quick-interact script
+  log('\n🎬 Step 5: Generating quick-interact script...', Color.Cyan);
+  try {
+    const quickInteractPath = path.join(outputDir, 'scripts', 'quick-interact.ts');
+    const scriptsDir = path.dirname(quickInteractPath);
+    if (!fs.existsSync(scriptsDir)) {
+      fs.mkdirSync(scriptsDir, { recursive: true });
+    }
+    generateAndWriteQuickInteract(destContractPath, quickInteractPath);
+    success(`Quick-interact script generated: scripts/quick-interact.ts`);
+    success(`Run with: npx hardhat run scripts/quick-interact.ts --network localhost`);
+  } catch (err) {
+    log(`⚠️  Could not generate quick-interact script: ${(err as Error).message}`, Color.Yellow);
+  }
+
+  // Step 6: Copy Frontend (Optional)
   if (useFrontend) {
-    log('\n🎨 Step 5: Copying frontend template...', Color.Cyan);
+    log('\n🎨 Step 6: Copying frontend template...', Color.Cyan);
     const frontendSource = path.join(rootDir, 'frontend-template');
     const frontendDest = path.join(outputDir, 'frontend');
     
@@ -291,8 +344,8 @@ function createExample(exampleName: string, outputDir: string, useFrontend: bool
     success('Frontend template copied to /frontend');
   }
 
-  // Step 6: Generate README
-  log(`\n📝 Step ${useFrontend ? '6' : '5'}: Generating README...`, Color.Cyan);
+  // Step 7: Generate README
+  log(`\n📝 Step ${useFrontend ? '7' : '6'}: Generating README...`, Color.Cyan);
   const readme = generateReadme(exampleName, example.description, contractName, useFrontend);
   fs.writeFileSync(path.join(outputDir, 'README.md'), readme);
   success('README.md generated');
@@ -307,6 +360,8 @@ function createExample(exampleName: string, outputDir: string, useFrontend: bool
   log('  npm install');
   log('  npm run compile');
   log('  npm run test');
+  log('  npx hardhat node &');
+  log('  npx hardhat run scripts/quick-interact.ts --network localhost');
   if (useFrontend) {
     log('  cd frontend && npm install && npm run sync-abi && npm run dev');
   }
